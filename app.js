@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
+const cors = require("cors");
 
 /*** Custom imports ***/
 const router = require("./Router");
@@ -16,6 +17,8 @@ const PORT = 5000;
 app.use(helmet());
 // Body-Parser
 app.use(bodyParser.json());
+// Allow CORS
+app.use(cors());
 // App Router
 app.use("/api/", router);
 // Route Not-Found error

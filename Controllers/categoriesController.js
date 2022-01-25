@@ -42,9 +42,12 @@ exports.getCategories = async (req, res, next) => {
         },
       ]);
   } catch (error) {
+    console.log(error);
     return next(new HttpError(500, "Fetching categories failed"));
   }
-  res.json({ q, page, perPage, categories });
+  res
+    .status(200)
+    .json({ message: "Success", data: { q, page, perPage, categories } });
 };
 
 // Get category by id
@@ -55,7 +58,7 @@ exports.getCategoryById = async (req, res, next) => {
   } catch (error) {
     return next(new HttpError(500, "Fetching categories failed"));
   }
-  res.json(category);
+  res.status(200).json({ message: "Success", data: category });
 };
 
 // Create a category
@@ -69,18 +72,34 @@ exports.createCategory = async (req, res, next) => {
     return next(new HttpError(500, "Category's creation failed"));
   }
 
-  res.status(201).json({ category });
+  res
+    .status(201)
+    .json({ message: "Category Updated successefully", data: category });
 };
 
 // Update a category
-exports.updateCategory = async (req, res, next) => {};
+exports.updateCategory = async (req, res, next) => {
+  // const { _id, name, image, order, visibility } = req.body;
+  // const updatedData = { name, image, order, visibility };
+  try {
+    const category = await Category.findByIdAndUpdate(req.body._id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!category) throw new HttpError(404, "Category not found");
+  } catch (error) {
+    console.log(error);
+    return next(new HttpError(500, "Updating failed"));
+  }
+  res.status(200).json({ message: "Upadted successefully", data: category });
+};
 
 // Delete a category
 exports.deleteCategory = async (req, res, next) => {
   try {
-    await Category.findById(req.params.categoryId).remove().exec();
+    await Category.deleteOne({ _id: req.params.categoryId });
   } catch (error) {
     return next(new HttpError(500, "Category's deletion failed"));
   }
-  res.status(200).json({ message: "Category Deleted." });
+  res.status(200).json({ message: "Category Deleted.", data: null });
 };

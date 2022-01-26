@@ -5,8 +5,8 @@ const Schema = mongoose.Schema;
 
 const CategorySchema = new Schema({
   name: { type: String, required: true },
-  image: { type: String, required: true },
-  order: { type: Number, required: true },
+  image: { type: String },
+  order: { type: Number },
   visibility: { type: Boolean, required: true },
 });
 

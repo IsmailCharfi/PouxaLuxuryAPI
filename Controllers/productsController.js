@@ -6,7 +6,17 @@ const Product = require("../Models/Product");
 const HttpError = require("../Models/HttpError");
 
 // Get all products
-exports.getProducts = async (req, res, next) => {};
+exports.getProducts = async (req, res, next) => {
+  const {cat} = req.query;
+  let products = [];
+  try {
+    products = await Product.find({category: cat});
+  } catch (error) {
+    return next(new HttpError(500, "Fetching products failed"));
+  }
+  res.status(200).json({ message: "Success", data: products });
+
+};
 
 // Get product by id
 exports.getProductById = async (req, res, next) => {

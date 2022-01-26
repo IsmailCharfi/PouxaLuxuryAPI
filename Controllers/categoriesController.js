@@ -7,47 +7,55 @@ const HttpError = require("../Models/HttpError");
 
 // Get all categories
 exports.getCategories = async (req, res, next) => {
-  let { q, page, perPage } = req.query;
-  perPage = perPage || 5;
-  page = page || 1;
-  const skip = perPage * (page - 1);
-  const query = q ? new RegExp(q.trim(), "i") : null;
+  let { q, page, limit } = req.query;
+  limit = parseInt(limit) || 5;
+  page = parseInt(page) || 1;
+  const offset = limit * (page - 1);
+  const query = q ? new RegExp(q, "i") : new RegExp("");
 
-  let categories = [];
+  let data;
   try {
-    if (!q) categories = await Category.find().skip(skip).limit(perPage);
-    else
-      categories = await Category.aggregate([
-        {
-          $addFields: {
-            _idStr: { $toString: "$_id" },
-            orderStr: { $toString: "$order" },
-          },
+    data = await Category.aggregate([
+      {
+        $addFields: {
+          orderStr: { $toString: "$order" },
         },
-        {
-          $match: {
-            $or: [
-              { _idStr: { $regex: query } },
-              { name: { $regex: query } },
-              { orderStr: { $regex: query } },
-            ],
-          },
+      },
+      {
+        $match: {
+          $or: [{ name: { $regex: query } }, { orderStr: { $regex: query } }],
         },
-        { $project: { _idStr: 0, orderStr: 0 } },
-        {
-          $skip: skip,
+      },
+      { $project: { orderStr: 0 } },
+      {
+        $group: {
+          _id: null,
+          docs: { $push: "$$ROOT" },
+          count: { $sum: 1 },
         },
-        {
-          $limit: perPage,
+      },
+      {
+        $project: {
+          _id: 0,
+          count: 1,
+          docs: { $slice: ["$docs", offset, limit] },
         },
-      ]);
+      },
+    ]);
   } catch (error) {
     console.log(error);
     return next(new HttpError(500, "Fetching categories failed"));
   }
-  res
-    .status(200)
-    .json({ message: "Success", data: { q, page, perPage, categories } });
+  res.status(200).json({
+    message: "Success",
+    data: {
+      totalCount: data.length ? data[0].count : 0,
+      q,
+      page,
+      limit,
+      categories: data.length ? data[0].docs : [],
+    },
+  });
 };
 
 // Get category by id
@@ -55,7 +63,9 @@ exports.getCategoryById = async (req, res, next) => {
   let category;
   try {
     category = await Category.findById(req.params.categoryId);
+    if (!category) return next(new HttpError(404, "Category not found"));
   } catch (error) {
+    console.log(error);
     return next(new HttpError(500, "Fetching categories failed"));
   }
   res.status(200).json({ message: "Success", data: category });
@@ -63,35 +73,38 @@ exports.getCategoryById = async (req, res, next) => {
 
 // Create a category
 exports.createCategory = async (req, res, next) => {
-  const { name, image, order, visibility } = req.body;
-  const category = new Category({ name, image, order, visibility });
-
+  const category = new Category(req.body);
   try {
     await category.save();
   } catch (error) {
+    console.log(error);
     return next(new HttpError(500, "Category's creation failed"));
   }
-
   res
     .status(201)
-    .json({ message: "Category Updated successefully", data: category });
+    .json({ message: "Category created successefully", data: category });
 };
 
 // Update a category
 exports.updateCategory = async (req, res, next) => {
-  // const { _id, name, image, order, visibility } = req.body;
-  // const updatedData = { name, image, order, visibility };
+  let category;
   try {
-    const category = await Category.findByIdAndUpdate(req.body._id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!category) throw new HttpError(404, "Category not found");
+    category = await Category.findByIdAndUpdate(
+      { _id: req.params.categoryId },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    if (!category) return next(new HttpError(404, "Category not found"));
   } catch (error) {
     console.log(error);
     return next(new HttpError(500, "Updating failed"));
   }
-  res.status(200).json({ message: "Upadted successefully", data: category });
+  res
+    .status(200)
+    .json({ message: "Category upadted successefully", data: category });
 };
 
 // Delete a category
@@ -99,6 +112,7 @@ exports.deleteCategory = async (req, res, next) => {
   try {
     await Category.deleteOne({ _id: req.params.categoryId });
   } catch (error) {
+    console.log(error);
     return next(new HttpError(500, "Category's deletion failed"));
   }
   res.status(200).json({ message: "Category Deleted.", data: null });

@@ -10,7 +10,7 @@ const categoriesController = require("../Controllers/categoriesController");
 router.get("/", categoriesController.getCategories);
 router.get("/:categoryId", categoriesController.getCategoryById);
 router.post("/", categoriesController.createCategory);
-router.patch("/", categoriesController.updateCategory);
+router.patch("/:categoryId", categoriesController.updateCategory);
 router.delete("/:categoryId", categoriesController.deleteCategory);
 
 module.exports = router;

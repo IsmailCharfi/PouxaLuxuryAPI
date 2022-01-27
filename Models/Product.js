@@ -15,13 +15,24 @@ const ProductSchema = new Schema({
   images: { type: [String] },
   type: { type: [String], required: true },
   tags: { type: [String] },
-  stock: [Object],
-  visibility: { type: Boolean },
+  stock: {
+    type: [
+      {
+        color: String,
+        sizes: [
+          {
+            size: Number,
+            quantity: Number,
+          },
+        ],
+      },
+    ],
+    required: true,
+  },
 });
 
 ProductSchema.pre("save", async function (next) {
   const category = await Category.findById(this.category);
-  console.log(category);
   if (!this.description) {
     this.description = category.name;
   }

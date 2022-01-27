@@ -8,6 +8,7 @@ const Validator = require("../Validation/categoryValidation");
 /***   ROUTE: /api/categories/*     ***/
 
 router.get("/", categoriesController.getCategories);
+router.get("/type/:type", categoriesController.getCategoriesByType)
 router.get("/:categoryId", categoriesController.getCategoryById);
 router.post("/", Validator.formValidation, categoriesController.createCategory);
 router.patch("/:categoryId", Validator.formValidation, categoriesController.updateCategory);

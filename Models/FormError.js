@@ -1,8 +1,8 @@
 const HttpError = require("./HttpError");
 
 class FormError extends HttpError{
-    constructor(code, message, rejectedInputs){
-        super(code, message)
+    constructor(rejectedInputs){
+        super(422, "les informations fournies ne sont pas valides")
         this.rejectedInputs = rejectedInputs
     }
 }

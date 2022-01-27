@@ -24,6 +24,6 @@ exports.handleValidationResult = (req) => {
         errorMessage: error.msg,
       })
     );
-    throw new FormError(422, "les informations fournies ne sont pas valides", errors);
+    throw new FormError(errors);
   }
 };

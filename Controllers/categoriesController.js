@@ -28,6 +28,7 @@ exports.getCategories = async (req, res, next) => {
         },
       },
       { $project: { orderStr: 0 } },
+      { $sort: {updatedAt: -1}},
       {
         $group: {
           _id: null,
@@ -72,11 +73,33 @@ exports.getCategoryById = async (req, res, next) => {
 };
 
 exports.getCategoriesByType = async (req, res, next) => {
-  try{
-    const products = await Product.find({type: req.params.type})
-
-  } catch (erreur) {}
-}
+  try {
+    let categories = await Product.aggregate([
+      { $match: { type: req.params.type } },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      {
+        $set: {
+          category: { $first: "$category" },
+        },
+      },
+      { $sort: {"category.order": 1}},
+      { $match: {"category.visibility": true}},
+      { $group: { _id: "$category" } },
+    ]);
+    categories = categories.map((el) => el._id);
+    res.status(200).json({ message: "Success", data: categories });
+  } catch (erreur) {
+    console.log(error);
+    return next(new HttpError(500, "Fetching categories failed"));
+  }
+};
 
 // Create a category
 exports.createCategory = async (req, res, next) => {

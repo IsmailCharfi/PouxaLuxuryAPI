@@ -1,8 +1,10 @@
 /*** Third-Party imports ***/
+const mongoose = require("mongoose");
 
 /*** Custom imports ***/
 const Product = require("../Models/Product");
 const HttpError = require("../Models/HttpError");
+const { Mongoose } = require("mongoose");
 
 // Get all products
 // url: GET: /api/products?q=string&page=num&limit=num&category&type=&brand=xx&price=min&price=max&inStock=bool
@@ -26,12 +28,11 @@ exports.getProducts = async (req, res, next) => {
     page = parseInt(page) || 1;
     const offset = limit * (page - 1);
     const query = q ? new RegExp(q, "i") : new RegExp("");
-    
-    if(order !== undefined){
+
+    if (order !== undefined) {
       order = parseInt(order);
-      if(order && Math.abs(order) != 1) order = undefined
+      if (order && Math.abs(order) != 1) order = undefined;
     }
-    
 
     if (price && price.length === 2) {
       price[0] = parseFloat(price[0]);
@@ -94,16 +95,22 @@ exports.getProducts = async (req, res, next) => {
       },
       { $project: { priceStr: 0 } },
     ];
+
     // Push to the pipeline flow if the query exists
-    if (category) pipeline.push({ $match: { "category._id": category } });
-    if (type) pipeline.push({ $match: { type: type } });
-    if (brand) pipeline.push({ $match: { brand: brand } });
+    if (category) pipeline.push({ $match: { "category._id": mongoose.Types.ObjectId(category)} });
+    if (color && !size) pipeline.push({ $match: { "stock.color": color } });
+    if (size && !color) pipeline.push({$match: { "stock.sizes.size": size }});
+    if (size && color) pipeline.push({$match:{ stock:{ $elemMatch: { color, "sizes.size":size }}}});
+    if (type) pipeline.push({ $match: {type} });
+    if (brand) pipeline.push({ $match: {brand} });
     if (price)
-      pipeline.push({ $match: { price: { $lte: price[0], $gte: price[1] } } });
+      pipeline.push({ $match: { price: { $gte: price[0], $lte: price[1] } } });
     if (inStock)
       pipeline.push({ $match: { "stock.sizes.quantity": { $ne: 0 } } });
     else if (inStock !== undefined)
       pipeline.push({ $match: { _id: { $in: outOfStockProds } } });
+    if (order) pipeline.push({ $sort: { price: order } });
+    else pipeline.push({ $sort: { updatedAt: -1 } });
 
     pipeline.push(
       {
@@ -121,9 +128,6 @@ exports.getProducts = async (req, res, next) => {
         },
       }
     );
-
-    if (order) pipeline.push({$sort: {price: order}})
-    console.log(pipeline)
 
     const data = await Product.aggregate(pipeline);
     res.status(200).json({
@@ -149,28 +153,36 @@ exports.getProducts = async (req, res, next) => {
 
 exports.getCharacteristics = async (req, res, next) => {
   try {
-    const { type } = req.query;
-    const brands = await Product.aggregate([
-      { $match: { type: type } },
+    const { type, category } = req.query;
+
+    let brands = await Product.aggregate([
+      { $match: { type, category } },
       { $group: { _id: "$brand" } },
       { $project: { _id: 0, brand: "$_id" } },
     ]);
-    const colors = await Product.aggregate([
-      { $match: { type: type } },
+    brands = brands.map(el => el.brand);
+
+    let colors = await Product.aggregate([
+      { $match: { type } },
       { $unwind: "$stock" },
       { $group: { _id: "$stock.color" } },
       { $project: { _id: 0, color: "$_id" } },
     ]);
-    const sizes = await Product.aggregate([
-      { $match: { type: type } },
+    colors = colors.map(el => el.color);
+
+    let sizes = await Product.aggregate([
+      { $match: { type } },
       { $unwind: "$stock" },
       { $unwind: "$stock.sizes" },
       { $group: { _id: "$stock.sizes.size" } },
       { $project: { _id: 0, size: "$_id" } },
-    ]);
-    res.status(200).json({ sizes });
+    ]);    
+    sizes = sizes.map(el => el.size);
+
+    res.status(200).json({ brands, sizes, colors });
   } catch (error) {
     console.log(error);
+    return next(new HttpError(500, "Fetching categories failed"));
   }
 };
 
@@ -186,10 +198,10 @@ exports.getProductById = async (req, res, next) => {
 };
 
 // Get Recommended products
-// /api/products/recommendations?product=id
+// /api/products/recommendations/productId
 exports.getRecommendedProducts = async (req, res, next) => {
   try {
-    const { product: productId } = req.query;
+    const productId  = req.params.productId;
     const product = await Product.findById(productId);
     const tags = product.tags;
     const products = await Product.find({
@@ -199,7 +211,7 @@ exports.getRecommendedProducts = async (req, res, next) => {
     res.status(200).json({ data: products });
   } catch (erreur) {
     console.log(erreur);
-    res.status(500).json({ message: "error" });
+    res.status(500).json({ message: "Fetching products failed" });
   }
 };
 

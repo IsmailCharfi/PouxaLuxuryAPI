@@ -1,4 +1,3 @@
-const HttpError = require("../Models/httpError");
 const FormError = require("../Models/FormError");
 
 module.exports = (error, req, res, next) => {

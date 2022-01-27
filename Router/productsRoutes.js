@@ -8,6 +8,8 @@ const productsController = require("../Controllers/productsController");
 /***   ROUTE: /api/products/*     ***/
 
 router.get("/", productsController.getProducts);
+router.get("/recommendations", productsController.getRecommendedProducts)
+router.get("/characteristics", productsController.getCharacteristics)
 router.get("/:productId", productsController.getProductById);
 router.post("/", productsController.createProduct);
 router.patch("/:productId", productsController.updateProduct);

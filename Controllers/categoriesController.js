@@ -5,6 +5,7 @@ const Category = require("../Models/Category");
 const HttpError = require("../Models/HttpError");
 const FormError = require("../Models/FormError");
 const Validator = require("../Validation/categoryValidation.js");
+const Product = require("../Models/Product");
 
 // Get all categories
 exports.getCategories = async (req, res, next) => {
@@ -60,9 +61,8 @@ exports.getCategories = async (req, res, next) => {
 
 // Get category by id
 exports.getCategoryById = async (req, res, next) => {
-  let category;
   try {
-    category = await Category.findById(req.params.categoryId);
+    const category = await Category.findById(req.params.categoryId);
     if (!category) return next(new HttpError(404, "Category not found"));
     res.status(200).json({ message: "Success", data: category });
   } catch (error) {
@@ -70,6 +70,13 @@ exports.getCategoryById = async (req, res, next) => {
     return next(new HttpError(500, "Fetching categories failed"));
   }
 };
+
+exports.getCategoriesByType = async (req, res, next) => {
+  try{
+    const products = await Product.find({type: req.params.type})
+
+  } catch (erreur) {}
+}
 
 // Create a category
 exports.createCategory = async (req, res, next) => {

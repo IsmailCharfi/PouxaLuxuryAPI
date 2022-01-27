@@ -5,7 +5,7 @@ const { body, validationResult } = require("express-validator");
 const FormError = require("../Models/FormError");
 
 exports.formValidation = [
-  body("name").notEmpty().trim().withMessage("veuillez entrer un nom non vide"),
+  body("name").trim().notEmpty().withMessage("veuillez entrer un nom non vide"),
   body("image")
     .notEmpty()
     .trim()

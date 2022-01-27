@@ -8,12 +8,30 @@ const HttpError = require("../Models/HttpError");
 // url: GET: /api/products?q=string&page=num&limit=num&category&type=&brand=xx&price=min&price=max&inStock=bool
 exports.getProducts = async (req, res, next) => {
   try {
-    let { q, page, limit, category, type, brand, price, inStock } = req.query;
+    let {
+      q,
+      page,
+      limit,
+      category,
+      type,
+      brand,
+      price,
+      size,
+      color,
+      order,
+      inStock,
+    } = req.query;
 
     limit = parseInt(limit) || 5;
     page = parseInt(page) || 1;
     const offset = limit * (page - 1);
     const query = q ? new RegExp(q, "i") : new RegExp("");
+    
+    if(order !== undefined){
+      order = parseInt(order);
+      if(order && Math.abs(order) != 1) order = undefined
+    }
+    
 
     if (price && price.length === 2) {
       price[0] = parseFloat(price[0]);
@@ -104,6 +122,9 @@ exports.getProducts = async (req, res, next) => {
       }
     );
 
+    if (order) pipeline.push({$sort: {price: order}})
+    console.log(pipeline)
+
     const data = await Product.aggregate(pipeline);
     res.status(200).json({
       message: "Success",
@@ -126,6 +147,33 @@ exports.getProducts = async (req, res, next) => {
   }
 };
 
+exports.getCharacteristics = async (req, res, next) => {
+  try {
+    const { type } = req.query;
+    const brands = await Product.aggregate([
+      { $match: { type: type } },
+      { $group: { _id: "$brand" } },
+      { $project: { _id: 0, brand: "$_id" } },
+    ]);
+    const colors = await Product.aggregate([
+      { $match: { type: type } },
+      { $unwind: "$stock" },
+      { $group: { _id: "$stock.color" } },
+      { $project: { _id: 0, color: "$_id" } },
+    ]);
+    const sizes = await Product.aggregate([
+      { $match: { type: type } },
+      { $unwind: "$stock" },
+      { $unwind: "$stock.sizes" },
+      { $group: { _id: "$stock.sizes.size" } },
+      { $project: { _id: 0, size: "$_id" } },
+    ]);
+    res.status(200).json({ sizes });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 // Get product by id
 exports.getProductById = async (req, res, next) => {
   try {
@@ -134,6 +182,24 @@ exports.getProductById = async (req, res, next) => {
     res.status(200).json({ message: "Success", data: product });
   } catch (error) {
     return next(new HttpError(500, "Fetching products failed"));
+  }
+};
+
+// Get Recommended products
+// /api/products/recommendations?product=id
+exports.getRecommendedProducts = async (req, res, next) => {
+  try {
+    const { product: productId } = req.query;
+    const product = await Product.findById(productId);
+    const tags = product.tags;
+    const products = await Product.find({
+      tags: { $elemMatch: { $in: tags } },
+      _id: { $ne: productId },
+    }).limit(20);
+    res.status(200).json({ data: products });
+  } catch (erreur) {
+    console.log(erreur);
+    res.status(500).json({ message: "error" });
   }
 };
 

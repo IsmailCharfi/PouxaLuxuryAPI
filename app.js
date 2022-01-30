@@ -1,9 +1,9 @@
 /*** Third-Party imports ***/
 const express = require("express");
-const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
 const cors = require("cors");
+const path = require("path");
 
 /*** Custom imports ***/
 const router = require("./Router");
@@ -12,13 +12,16 @@ const routeNotFound = require("./Middlewares/routeNotFound");
 
 const app = express();
 const PORT = 5000;
+global.appRoot = path.resolve(__dirname);
 
 // HTTP headers setter
 app.use(helmet());
 // Body-Parser
-app.use(bodyParser.json());
+app.use(express.json());
 // Allow CORS
 app.use(cors());
+// Set Static Route
+app.use("/uploads/images", express.static(path.join("Uploads", "Images")));
 // App Router
 app.use("/api/", router);
 // Route Not-Found error

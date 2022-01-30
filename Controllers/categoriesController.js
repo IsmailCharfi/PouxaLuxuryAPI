@@ -1,10 +1,11 @@
 /*** Third-Party imports ***/
+const fs = require("fs");
+const path = require("path");
 
 /*** Custom imports ***/
 const Category = require("../Models/Category");
 const HttpError = require("../Models/HttpError");
 const FormError = require("../Models/FormError");
-const Validator = require("../Validation/categoryValidation.js");
 const Product = require("../Models/Product");
 
 // Get all categories
@@ -28,7 +29,7 @@ exports.getCategories = async (req, res, next) => {
         },
       },
       { $project: { orderStr: 0 } },
-      { $sort: {updatedAt: -1}},
+      { $sort: { updatedAt: -1 } },
       {
         $group: {
           _id: null,
@@ -89,8 +90,9 @@ exports.getCategoriesByType = async (req, res, next) => {
           category: { $first: "$category" },
         },
       },
-      { $sort: {"category.order": 1}},
-      { $match: {"category.visibility": true}},
+      { $match: { "category.order": {$ne : 0}}},
+      { $sort: { "category.order": 1 } },
+      { $match: { "category.visibility": true } },
       { $group: { _id: "$category" } },
     ]);
     categories = categories.map((el) => el._id);
@@ -104,9 +106,8 @@ exports.getCategoriesByType = async (req, res, next) => {
 // Create a category
 exports.createCategory = async (req, res, next) => {
   try {
-    Validator.handleValidationResult(req);
     const category = new Category(req.body);
-    await category.save();
+    await category.save(req);
     res
       .status(201)
       .json({ message: "Category created successefully", data: category });
@@ -120,7 +121,6 @@ exports.createCategory = async (req, res, next) => {
 // Update a category
 exports.updateCategory = async (req, res, next) => {
   try {
-    Validator.handleValidationResult(req);
     const category = await Category.findByIdAndUpdate(
       { _id: req.params.categoryId },
       req.body,

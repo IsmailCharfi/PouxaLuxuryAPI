@@ -2,7 +2,7 @@
 const fs = require("fs");
 
 /*** Custom imports ***/
-const FormError = require("../Models/FormError");
+const FormError = require("../Errors/FormError");
 
 module.exports = (error, req, res, next) => {
 

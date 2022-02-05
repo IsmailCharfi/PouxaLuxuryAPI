@@ -2,7 +2,7 @@
 const { validationResult } = require("express-validator");
 
 /*** Custom imports ***/
-const HttpError = require("../Models/HttpError");
+const HttpError = require("../Errors/HttpError");
 const Product = require("../Models/Product");
 
 // Get all stats

@@ -3,9 +3,9 @@ const fs = require("fs");
 const path = require("path");
 
 /*** Custom imports ***/
+const HttpError = require("../Errors/HttpError");
+const FormError = require("../Errors/FormError");
 const Category = require("../Models/Category");
-const HttpError = require("../Models/HttpError");
-const FormError = require("../Models/FormError");
 const Product = require("../Models/Product");
 
 // Get all categories
@@ -90,7 +90,7 @@ exports.getCategoriesByType = async (req, res, next) => {
           category: { $first: "$category" },
         },
       },
-      { $match: { "category.order": {$ne : 0}}},
+      { $match: { "category.order": { $ne: 0 } } },
       { $sort: { "category.order": 1 } },
       { $match: { "category.visibility": true } },
       { $group: { _id: "$category" } },
@@ -121,15 +121,15 @@ exports.createCategory = async (req, res, next) => {
 // Update a category
 exports.updateCategory = async (req, res, next) => {
   try {
-    const category = await Category.findByIdAndUpdate(
-      { _id: req.params.categoryId },
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const _id = req.params.categoryId;
+    const { name, order, visibility } = req.body;
+    const category = await Category.findById(_id);
     if (!category) return next(new HttpError(404, "Category not found"));
+    if (category.name !== name) category.name = name;
+    if (category.order !== order) category.order = order;
+    if (category.visibility !== visibility) category.visibility = visibility;
+    await category.save(req);
+
     res
       .status(200)
       .json({ message: "Category upadted successefully", data: category });
@@ -143,7 +143,8 @@ exports.updateCategory = async (req, res, next) => {
 // Delete a category
 exports.deleteCategory = async (req, res, next) => {
   try {
-    await Category.deleteOne({ _id: req.params.categoryId });
+    const category = await Category.findById(req.params.categoryId)
+    await category.deleteOne();
     res.status(200).json({ message: "Category Deleted.", data: null });
   } catch (error) {
     console.log(error);

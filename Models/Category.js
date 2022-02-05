@@ -17,12 +17,34 @@ const CategorySchema = new Schema(
   }
 );
 
+const unlinkImage = (imagePath) => {
+  const fileName = path.parse(imagePath).base;
+  fs.unlink(`${appRoot}/Uploads/Images/${fileName}`, (error) => {
+    if (error) {
+      console.log(error);
+      throw new Error(error.message);
+    }
+  });
+};
+
 CategorySchema.pre("save", async function (next, req) {
   if (!this.order) this.order = 0;
   if (this.visibility === undefined) this.visibility = true;
-  this.image = `http://localhost:5000/uploads/images/${path.parse(req.file.path).base}`;
+  if (req.file && req.body.mode) unlinkImage(this.image);
+  if (req.file)
+    this.image = `http://localhost:5000/uploads/images/${
+      path.parse(req.file.path).base
+    }`;
 
   next();
 });
+
+CategorySchema.post(
+  "deleteOne",
+  { document: true, query: false },
+  async function () {
+    if (this.image.length) unlinkImage(this.image);
+  }
+);
 
 module.exports = mongoose.model("Category", CategorySchema);

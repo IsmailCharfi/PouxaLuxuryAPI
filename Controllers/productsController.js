@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 /*** Custom imports ***/
 const Product = require("../Models/Product");
-const HttpError = require("../Models/HttpError");
+const HttpError = require("../Errors/HttpError");
 const { Mongoose } = require("mongoose");
 
 // Get all products

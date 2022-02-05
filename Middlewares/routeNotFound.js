@@ -1,4 +1,4 @@
-const HttpError = require("../Models/HttpError");
+const HttpError = require("../Errors/HttpError");
 
 module.exports = (req, res, next) => {
   throw new HttpError(404, "Page not found");

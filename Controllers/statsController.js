@@ -2,7 +2,7 @@
 const { validationResult } = require("express-validator");
 
 /*** Custom imports ***/
-const HttpError = require("../Errors/HttpError");
+const HttpError = require("../Misc/Errors/HttpError");
 const Product = require("../Models/Product");
 
 // Get all stats
@@ -66,18 +66,18 @@ exports.getCategoriesStats = async (req, res, next) => {
     });
     if (filter === "ordered")
       series = [
-        { name: "test1", count: 100 },
-        { name: "test2", count: 150 },
-        { name: "test3", count: 200 },
-        { name: "test4", count: 330 },
-        { name: "test5", count: 350 },
-        { name: "test6", count: 20 },
-        { name: "test7", count: 360 },
-        { name: "test8", count: 30 },
-        { name: "test9", count: 10 },
-        { name: "test10", count: 90 },
-        { name: "test11", count: 70 },
-        { name: "test10", count: 300 },
+        { name: "heni1", count: 100 },
+        { name: "heni2", count: 150 },
+        { name: "heni3", count: 200 },
+        { name: "heni4", count: 330 },
+        { name: "heni5", count: 350 },
+        { name: "heni6", count: 20 },
+        { name: "heni7", count: 360 },
+        { name: "heni8", count: 30 },
+        { name: "heni9", count: 10 },
+        { name: "heni10", count: 90 },
+        { name: "heni11", count: 70 },
+        { name: "heni10", count: 300 },
       ];
 
     res.status(200).json({ message: "Success", data: { series } });

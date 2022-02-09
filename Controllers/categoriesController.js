@@ -3,8 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 /*** Custom imports ***/
-const HttpError = require("../Errors/HttpError");
-const FormError = require("../Errors/FormError");
+const HttpError = require("../Misc/Errors/HttpError");
+const FormError = require("../Misc/Errors/FormError");
 const Category = require("../Models/Category");
 const Product = require("../Models/Product");
 

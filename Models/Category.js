@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
+const FormMode = require("../Misc/FormMode")
 
 const Schema = mongoose.Schema;
 
@@ -19,7 +20,7 @@ const CategorySchema = new Schema(
 
 const unlinkImage = (imagePath) => {
   const fileName = path.parse(imagePath).base;
-  fs.unlink(`${appRoot}/Uploads/Images/${fileName}`, (error) => {
+  fs.unlink(`${appRoot}/Uploads/images/categories/${fileName}`, (error) => {
     if (error) {
       console.log(error);
       throw new Error(error.message);
@@ -30,9 +31,9 @@ const unlinkImage = (imagePath) => {
 CategorySchema.pre("save", async function (next, req) {
   if (!this.order) this.order = 0;
   if (this.visibility === undefined) this.visibility = true;
-  if (req.file && req.body.mode) unlinkImage(this.image);
+  if (req.file && req.body.mode === FormMode.EDIT_MODE) unlinkImage(this.image);
   if (req.file)
-    this.image = `http://localhost:5000/uploads/images/${
+    this.image = `http://localhost:5000/uploads/images/categories/${
       path.parse(req.file.path).base
     }`;
 

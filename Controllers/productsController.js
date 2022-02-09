@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 /*** Custom imports ***/
 const Product = require("../Models/Product");
-const HttpError = require("../Errors/HttpError");
+const HttpError = require("../Misc/Errors/HttpError");
 const { Mongoose } = require("mongoose");
 
 // Get all products
@@ -154,16 +154,21 @@ exports.getProducts = async (req, res, next) => {
 exports.getCharacteristics = async (req, res, next) => {
   try {
     const { type, category } = req.query;
+    const typeFilter = []
+    const categoryFilter = []
+
+    if(type) typeFilter.push({ $match: { type } }) 
+    if (category) categoryFilter.push({ $match: { type, category } })
 
     let brands = await Product.aggregate([
-      { $match: { type, category } },
+      ...categoryFilter,
       { $group: { _id: "$brand" } },
       { $project: { _id: 0, brand: "$_id" } },
     ]);
     brands = brands.map(el => el.brand);
 
     let colors = await Product.aggregate([
-      { $match: { type } },
+      ...typeFilter,
       { $unwind: "$stock" },
       { $group: { _id: "$stock.color" } },
       { $project: { _id: 0, color: "$_id" } },
@@ -171,7 +176,7 @@ exports.getCharacteristics = async (req, res, next) => {
     colors = colors.map(el => el.color);
 
     let sizes = await Product.aggregate([
-      { $match: { type } },
+      ...typeFilter,
       { $unwind: "$stock" },
       { $unwind: "$stock.sizes" },
       { $group: { _id: "$stock.sizes.size" } },

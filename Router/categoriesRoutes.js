@@ -5,6 +5,7 @@ const router = require("express").Router();
 const categoriesController = require("../Controllers/categoriesController");
 const Validator = require("../Validation/categoryValidation");
 const imageUploader = require("../Middlewares/imageUploader");
+const FormMode = require("../Misc/FormMode")
 
 /***   ROUTE: /api/categories/*     ***/
 
@@ -13,14 +14,16 @@ router.get("/type/:type", categoriesController.getCategoriesByType);
 router.get("/:categoryId", categoriesController.getCategoryById);
 router.post(
   "/",
-  imageUploader.single("image"),
+  imageUploader("categories").single("image"),
+  (req, res, next) => {req.body.mode = FormMode.CREATE_MODE; next()},
   Validator.formValidation,
   Validator.handleValidationResult,
   categoriesController.createCategory
 );
 router.patch(
   "/:categoryId",
-  imageUploader.single("image"),
+  imageUploader("categories").single("image"),
+  (req, res, next) => {req.body.mode = FormMode.EDIT_MODE; next()}, 
   Validator.formValidation,
   Validator.handleValidationResult,
   categoriesController.updateCategory

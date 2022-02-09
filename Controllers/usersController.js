@@ -3,7 +3,7 @@ const { validationResult } = require("express-validator");
 
 /*** Custom imports ***/
 const User = require("../Models/User");
-const HttpError = require("../Errors/HttpError");
+const HttpError = require("../Misc/Errors/HttpError");
 
 // Get all users
 exports.getUsers = async (req, res, next) => {};

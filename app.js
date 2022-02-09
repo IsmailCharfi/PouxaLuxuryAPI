@@ -21,7 +21,7 @@ app.use(express.json());
 // Allow CORS
 app.use(cors());
 // Set Static Route
-app.use("/uploads/images", express.static(path.join("Uploads", "Images")));
+app.use("/uploads/images", express.static(path.join("Uploads", "images")));
 // App Router
 app.use("/api/", router);
 // Route Not-Found error

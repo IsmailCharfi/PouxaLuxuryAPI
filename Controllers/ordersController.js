@@ -3,7 +3,7 @@ const { validationResult } = require("express-validator");
 
 /*** Custom imports ***/
 const Order = require("../Models/Order");
-const HttpError = require("../Errors/HttpError");
+const HttpError = require("../Misc/Errors/HttpError");
 
 // Get all orders
 exports.getOrders = async (req, res, next) => {};
